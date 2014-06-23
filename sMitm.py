@@ -15,7 +15,7 @@ B  = '\033[34m' # blue
 logger = open("sMitm_log.text", "w+")
 logger.write("----------Start----------\n")
 logger.write("----------%s----------\n" % time.strftime("%d/%m/%Y %H:%M:%S"))
-print(R + 'press "Ctrl+C" to exit' + W + "\n")
+
 class Parser:
     http_ports   = [80]
     mail_ports  = [25, 26, 110, 143]
@@ -216,7 +216,8 @@ def main( ):
     kw = {"iface": iface, "prn": parser.parseHandler, "filter": "tcp"}
     sniffThread = threading.Thread(target=sniff, kwargs=kw)
     sniffThread.start( )
-
+    
+    print(R+'press "Ctrl+C" to exit' + W)
     print(R+"Interface: "+B+iface+W)
     print(R+"Target IP: "+B+target_ip + R+" --->> " + R+"Target MAC: " + B+target_mac+W)
     print(R+"Router IP: "+B+router_ip + R+" --->> " + R+"Router MAC: " + B+router_mac+W)
