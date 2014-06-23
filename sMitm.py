@@ -186,7 +186,7 @@ class sMitm:
         if sys.platform[:3] == "dar":
             os.system("sysctl -w net.inet.ip.forwarding=1")  # forwarding ip for MAC OS X
         elif sys.platform[:3] == "lin":
-            os.system("sysctl -w net.ipv4.ip_forward=1")
+            os.system("sysctl -w net.ipv4.ip_forward=1")    # forwarding ip for Linux
     
     def stopForwardPacket(self):
         if sys.platform[:3] == "dar":
