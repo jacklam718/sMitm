@@ -13,9 +13,9 @@ G  = '\033[32m' # green
 B  = '\033[34m' # blue
 
 logger = open("sMitm_log.text", "w+")
-logger.write("------------------Start---------------------\n")
+logger.write("----------Start----------\n")
 logger.write("----------%s----------\n" % time.strftime("%d/%m/%Y %H:%M:%S"))
-
+print(R + 'press "Ctrl+C" to exit' + W + "\n")
 class Parser:
     http_ports   = [80]
     mail_ports  = [25, 26, 110, 143]
@@ -229,7 +229,7 @@ def main( ):
             time.sleep(1.5)
         except KeyboardInterrupt:
             mitm.stopForwardPacket( )
-            logger.write("------------------End---------------------\n")
+            logger.write("----------End----------\n")
             logger.write("----------%s----------\n" % time.strftime("%d/%m/%Y %H:%M:%S"))
             logger.close( )
             exit()
