@@ -4,6 +4,6 @@ sMitm ==>> Simple Man-In-The-Middle
 
 Usage 
 =====
--rip = "Router IP"
--ip  = "Target IP"
--i   = "Interface"
+-rip = "Router IP"</br>
+-ip  = "Target IP"</br>
+-i   = "Interface"</br>
